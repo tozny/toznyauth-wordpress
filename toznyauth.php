@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: ToznyAuth
+Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress.
 Version: 	0.0.1
 Author: SEQRD, LLC
@@ -19,8 +19,6 @@ Text Domain: toznyauth
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) die('Sorry, you don&#39;t have direct access to this page.');
 
 //=====================================================================
-define( 'TOZNYAUTH_PATH', plugin_dir_path(__FILE__) );
-
 require_once 'ToznyRemoteUserAPI.php';
 require_once 'ToznyRemoteRealmAPI.php';
 //=====================================================================
@@ -31,16 +29,15 @@ require_once 'ToznyRemoteRealmAPI.php';
 //=====================================================================
 add_action('login_head','add_tozny_lib');
 add_action('login_form','add_tozny_script');
+add_action('admin_menu', 'tozny_create_menu');
 //=====================================================================
 function add_tozny_lib() {
 
     global $error;
 
-// TODO: REPLACE WITH WP OPTIONS
-    $API_URL = 'https://api.tozny.com/';
-    $REALM_KEY_ID = 'sid_530f958e5b5a9';
-    $REALM_KEY_SECRET = 'eda9b6c17ab091b754b7bce82ce0d04f9ac089e2d4088da1238da506872230c7';
-// TODO: REPLACE WITH WP OPTIONS
+    $API_URL = get_option('tozny_api_url');
+    $REALM_KEY_ID = get_option('tozny_realm_key_id');
+    $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
 
     if (!empty($_POST['tozny_action'])) {
         $tozny_signature   = $_POST['tozny_signature'];
@@ -120,10 +117,8 @@ function add_tozny_script() {
 
     global $error;
 
-// TODO: REPLACE WITH WP OPTIONS
-    $API_URL      = 'https://api.tozny.com/';
-    $REALM_KEY_ID = 'sid_530f958e5b5a9';
-// TODO: REPLACE WITH WP OPTIONS
+    $API_URL = get_option('tozny_api_url');
+    $REALM_KEY_ID = get_option('tozny_realm_key_id');
 
     try {
         $userApi = new Tozny_Remote_User_API($REALM_KEY_ID, $API_URL);
@@ -138,6 +133,19 @@ function add_tozny_script() {
     } catch (Exception $e) {
         $error = "An error occurred while attempting to generate a Tozny login challenge. More Info: ". $e->getMessage();
     }
+}
+
+function tozny_create_menu() {
+    add_menu_page('Tozny Plugin Settings', 'Tozny', 'administrator', __FILE__, 'tozny_settings_page',plugins_url('/images/icon.png', __FILE__));
+
+    add_action( 'admin_init', 'register_tozny_settings' );
+}
+
+
+function register_tozny_settings() {
+    register_setting( 'tozny-settings-group', 'tozny_realm_key_id' );
+    register_setting( 'tozny-settings-group', 'tozny_realm_key_secret' );
+    register_setting( 'tozny-settings-group', 'tozny_api_url' );
 }
 //=====================================================================
 
@@ -205,4 +213,36 @@ function displayToznyForm($api_url, $realm_key_id, $session_id, $qr_url, $mobile
 
 <?php
 }
+
+
+function tozny_settings_page() {
+    ?>
+    <div class="wrap">
+        <h2>Tozny</h2>
+
+        <form method="post" action="options.php">
+            <?php settings_fields( 'tozny-settings-group' ); ?>
+            <?php do_settings_sections( 'tozny-settings-group' ); ?>
+            <table class="form-table">
+                <tr valign="top">
+                    <th scope="row">API URL</th>
+                    <td><input type="text" name="tozny_api_url" value="<?= get_option('tozny_api_url') ?>" /></td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">Realm Key ID</th>
+                    <td><input type="text" name="tozny_realm_key_id" value="<?= get_option('tozny_realm_key_id') ?>" /></td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">Realm Key Secret</th>
+                    <td><input type="text" name="tozny_realm_key_secret" value="<?= get_option('tozny_realm_key_secret') ?>" /></td>
+                </tr>
+            </table>
+
+            <?php submit_button(); ?>
+
+        </form>
+    </div>
+<?php }
 //=====================================================================
