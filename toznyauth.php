@@ -30,7 +30,38 @@ require_once 'ToznyRemoteRealmAPI.php';
 add_action('login_head','add_tozny_lib');
 add_action('login_form','add_tozny_script');
 add_action('admin_menu', 'tozny_create_menu');
+add_action('load-toplevel_page_toznyauth/toznyauth','test_realm_key');
 //=====================================================================
+
+function test_realm_key() {
+    if(isset($_GET['settings-updated']) && $_GET['settings-updated'])
+    {
+        global $REALM_KEY_TEST_SUCCESS;
+        global $REALM_KEY_TEST_MESSAGE;
+
+        $API_URL = get_option('tozny_api_url');
+        $REALM_KEY_ID = get_option('tozny_realm_key_id');
+        $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
+        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
+        try {
+            $resp = $realm_api->realmKeysGet();
+            if (array_key_exists('return', $resp) && $resp['return'] === 'ok') {
+                $REALM_KEY_TEST_SUCCESS = true;
+                $REALM_KEY_TEST_MESSAGE = 'Realm key credentials look good!';
+            }
+            else {
+                $e = array_shift($resp['errors']);
+                $REALM_KEY_TEST_SUCCESS = false;
+                $REALM_KEY_TEST_MESSAGE = "Error while testing realm key credentials with Tozny. More info: ".$e['error_message'];
+            }
+        }
+        catch (Exception $e) {
+            $REALM_KEY_TEST_SUCCESS = false;
+            $REALM_KEY_TEST_MESSAGE = "Error while testing realm key credentials with Tozny. More info: ".$e->getMessage();
+        }
+    }
+}
+
 function add_tozny_lib() {
 
     global $error;
@@ -38,6 +69,7 @@ function add_tozny_lib() {
     $API_URL = get_option('tozny_api_url');
     $REALM_KEY_ID = get_option('tozny_realm_key_id');
     $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
+    $ALLOW_USERS_TO_ADD_DEVICES = get_option('tozny_allow_users_to_add_devices');
 
     if (!empty($_POST['tozny_action'])) {
         $tozny_signature   = $_POST['tozny_signature'];
@@ -100,7 +132,7 @@ function add_tozny_lib() {
                 }
                 // We did not found a corresponding WordPress user
                 else {
-                    $error = "Could not find a Wordpress user wth a matching username or email address. Please contact your administrator.";
+                    $error = "Could not find a Wordpress user with a matching username or email address. Please contact your administrator.";
                 }
 
             }
@@ -146,6 +178,7 @@ function register_tozny_settings() {
     register_setting( 'tozny-settings-group', 'tozny_realm_key_id' );
     register_setting( 'tozny-settings-group', 'tozny_realm_key_secret' );
     register_setting( 'tozny-settings-group', 'tozny_api_url' );
+    register_setting( 'tozny-settings-group', 'tozny_allow_users_to_add_devices' );
 }
 //=====================================================================
 
@@ -216,6 +249,8 @@ function displayToznyForm($api_url, $realm_key_id, $session_id, $qr_url, $mobile
 
 
 function tozny_settings_page() {
+    global $REALM_KEY_TEST_SUCCESS;
+    global $REALM_KEY_TEST_MESSAGE;
     ?>
     <div class="wrap">
         <h2>Tozny</h2>
@@ -223,6 +258,11 @@ function tozny_settings_page() {
         <form method="post" action="options.php">
             <?php settings_fields( 'tozny-settings-group' ); ?>
             <?php do_settings_sections( 'tozny-settings-group' ); ?>
+            <?php if (isset($REALM_KEY_TEST_MESSAGE) && isset($REALM_KEY_TEST_SUCCESS)): ?>
+            <div id="update_status" style="background-color: <?= ($REALM_KEY_TEST_SUCCESS) ? "green" : "red" ?>; color:white; padding: 10px;">
+                <span><?= $REALM_KEY_TEST_MESSAGE ?></span>
+            </div>
+            <?php endif; ?>
             <table class="form-table">
                 <tr valign="top">
                     <th scope="row">API URL</th>
@@ -237,6 +277,11 @@ function tozny_settings_page() {
                 <tr valign="top">
                     <th scope="row">Realm Key Secret</th>
                     <td><input type="text" name="tozny_realm_key_secret" value="<?= get_option('tozny_realm_key_secret') ?>" /></td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">Allow users to add devices?</th>
+                    <td><input type="checkbox" name="tozny_allow_users_to_add_devices" <?php if ( 'on' == get_option('tozny_allow_users_to_add_devices') ) echo 'checked="checked"'; ?> /></td>
                 </tr>
             </table>
 
