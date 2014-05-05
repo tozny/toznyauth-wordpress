@@ -31,8 +31,132 @@ add_action('login_head','add_tozny_lib');
 add_action('login_form','add_tozny_script');
 add_action('admin_menu', 'tozny_create_menu');
 add_action('load-toplevel_page_toznyauth/toznyauth','test_realm_key');
-//=====================================================================
 
+# user editing their own profile page.
+add_action('personal_options_update', 'update_extra_profile_fields');
+add_action('profile_personal_options', 'extra_profile_fields' );
+
+//=====================================================================
+function update_extra_profile_fields($user_id) {
+    if ( current_user_can('edit_user',$user_id) ) {
+        if (get_user_meta($user_id, 'tozny_activate', true) != 'on' && $_POST['tozny_activate'] == 'on') {
+            update_user_meta($user_id, 'tozny_create_user', true);
+        }
+        else {
+            update_user_meta($user_id, 'tozny_create_user', false);
+        }
+        update_user_meta($user_id, 'tozny_activate', $_POST['tozny_activate']);
+    }
+}
+function extra_profile_fields($user) {
+    if (current_user_can('edit_user',$user->ID)) {
+?>
+        <h3>Tozny</h3>
+        <table class="form-table">
+            <tr>
+                <th><label for="tozny_activate">Use Tozny for this account?</label></th>
+                <td>
+                    <input type="checkbox" name="tozny_activate" id="tozny_activate" <?php if ( 'on' == get_user_meta($user->ID, 'tozny_activate', true) ) echo 'checked="checked"'; ?>/>
+                    <div id="tozny_activate_description" class="description">Use Tozny to log into this account.<div></div></div>
+
+                    <?php
+                    if (get_user_meta($user->ID, 'tozny_create_user', true)) {
+
+                        $API_URL = get_option('tozny_api_url');
+                        $REALM_KEY_ID = get_option('tozny_realm_key_id');
+                        $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
+                        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
+                        $tozny_user = null;
+                        try {
+                            # 1.  Get the email address from wprdpress
+                            # 2.  lookup email address on tozny, to see if the users exists already, and we need to add a new device.
+                            $tozny_user = $realm_api->userGetEmail($user->user_email);
+                        } catch (Exception $e) {
+                            $error_message = $e->getMessage();
+                            ?> <div id="message" class="error"><p><strong><?= $error_message ?></strong></p></div><?php
+                        }
+
+                        if (!is_null($tozny_user)) {
+                            # 3a. if the user does not exist, call real.user_add, paint the QR_url
+                            if ($tozny_user) {
+                                $new_device = $realm_api->realmUserDeviceAdd($tozny_user['user_id']);
+                                if ($new_device['return'] === 'ok') {
+                                    ?>
+                                    <a href="<?= $new_device['secret_enrollment_url'] ?>">
+                                        <img src="<?= $new_device['secret_enrollment_qr_url'] ?>" id="qr" class="center-block" style="height: 200px; width: 200px;">
+                                    </a>
+                                    <?php
+                                }
+                                else {
+                                    $error = array_shift($new_device['errors']);
+                                    ?> <div id="message" class="error"><p><strong><?= $error['error_message'] ?></strong></p></div><?php
+                                }
+                            }
+
+                            # 3b. if the user does exists, add a new user
+                            else {
+                                try {
+                                    $realm_fields = $realm_api->fieldsGet();
+                                    if ($realm_fields['return'] !== 'ok') {
+                                        $error = array_shift($realm_fields['errors']);
+                                        throw new Exception($error['error_message']);
+                                    }
+                                    $user_meta = array();
+                                    foreach ($realm_fields['results'] as $field) {
+                                        // this will set like "tozny_email" and stuff like that
+                                        if (!empty($field['maps_to'])) {
+                                            switch ($field['maps_to']) {
+                                                case "tozny_email":
+                                                    $user_meta[$field['field']] = $user->user_email;
+                                                    break;
+                                                case "tozny_username":
+                                                    $user_meta[$field['field']] = $user->user_login;
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    $tozny_user = $realm_api->userAdd('true', $user_meta);
+                                    if ($tozny_user['return'] !== 'ok') {
+                                        $error = array_shift($tozny_user['errors']);
+                                        throw new Exception($error['error_message']);
+                                    }
+
+                                    ?>
+                                    <a href="<?= $tozny_user['secret_enrollment_url'] ?>">
+                                        <img src="<?= $tozny_user['secret_enrollment_qr_url'] ?>" id="qr" class="center-block" style="height: 200px; width: 200px;">
+                                    </a>
+                                    <?php
+                                }
+                                catch (Exception $e) {
+                                    $error_message = $e->getMessage();
+                                    ?> <div id="message" class="error"><p><strong><?= $error_message ?></strong></p></div><?php
+                                }
+
+                            }
+                        }
+
+                    }
+                    ?>
+
+                    <script type="text/javascript">
+
+                        jQuery(document).ready(function() {
+                            jQuery('#tozny_activate').on('click', function () {
+                                if (jQuery(this).attr('checked') === 'checked') {
+                                    jQuery('#tozny_activate_description div').empty().append("<strong>Your Tozny account key will be displayed once you click the 'Update Profile' button below.</strong>");
+                                } else {
+                                    jQuery('#tozny_activate_description div').empty();
+                                }
+                            });
+                        });
+
+                    </script>
+                </td>
+            </tr>
+        </table>
+<?php
+    }
+}
 function test_realm_key() {
     if(isset($_GET['settings-updated']) && $_GET['settings-updated'])
     {
@@ -259,8 +383,8 @@ function tozny_settings_page() {
             <?php settings_fields( 'tozny-settings-group' ); ?>
             <?php do_settings_sections( 'tozny-settings-group' ); ?>
             <?php if (isset($REALM_KEY_TEST_MESSAGE) && isset($REALM_KEY_TEST_SUCCESS)): ?>
-            <div id="update_status" style="background-color: <?= ($REALM_KEY_TEST_SUCCESS) ? "green" : "red" ?>; color:white; padding: 10px;">
-                <span><?= $REALM_KEY_TEST_MESSAGE ?></span>
+            <div id="message" class="<?= ($REALM_KEY_TEST_SUCCESS) ? "updated" : "error" ?>">
+                    <p><strong><?= $REALM_KEY_TEST_MESSAGE ?></strong></p>
             </div>
             <?php endif; ?>
             <table class="form-table">
