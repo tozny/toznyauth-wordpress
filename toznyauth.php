@@ -58,7 +58,7 @@ function extra_profile_fields($user) {
                 <td>
                     <input type="checkbox" name="tozny_activate" id="tozny_activate" <?php if ( 'on' == get_user_meta($user->ID, 'tozny_activate', true) ) echo 'checked="checked"'; ?>/>
                     <div id="tozny_activate_description" class="description">Use Tozny to log into this account.<div></div></div>
-
+                    <pre><?php print_r(get_option('tozny_allow_users_to_add_devices')); ?></pre>
                     <?php
                     if (get_user_meta($user->ID, 'tozny_create_user', true)) {
 
@@ -134,7 +134,7 @@ function extra_profile_fields($user) {
 
                             }
                         }
-
+                        update_user_meta($user->ID, 'tozny_create_user', false);
                     }
                     ?>
 
@@ -390,7 +390,7 @@ function tozny_settings_page() {
             <table class="form-table">
                 <tr valign="top">
                     <th scope="row">API URL</th>
-                    <td><input type="text" name="tozny_api_url" value="<?= get_option('tozny_api_url') ?>" /></td>
+                    <td><input type="text" name="tozny_api_url" value="<?php $api_url = get_option('tozny_api_url'); echo empty($api_url) ? 'https://api.tozny.com/' : $api_url; ?>" /></td>
                 </tr>
 
                 <tr valign="top">
