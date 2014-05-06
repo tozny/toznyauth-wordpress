@@ -49,7 +49,7 @@ function update_extra_profile_fields($user_id) {
     }
 }
 function extra_profile_fields($user) {
-    if (current_user_can('edit_user',$user->ID)) {
+    if (current_user_can('edit_user',$user->ID) && ('on' == get_option('tozny_allow_users_to_add_devices')) ) {
 ?>
         <h3>Tozny</h3>
         <table class="form-table">
@@ -57,8 +57,7 @@ function extra_profile_fields($user) {
                 <th><label for="tozny_activate">Use Tozny for this account?</label></th>
                 <td>
                     <input type="checkbox" name="tozny_activate" id="tozny_activate" <?php if ( 'on' == get_user_meta($user->ID, 'tozny_activate', true) ) echo 'checked="checked"'; ?>/>
-                    <div id="tozny_activate_description" class="description">Use Tozny to log into this account.<div></div></div>
-                    <pre><?php print_r(get_option('tozny_allow_users_to_add_devices')); ?></pre>
+                    <span id="tozny_activate_description" class="description">Use Tozny to log into this account.<strong></strong></span>
                     <?php
                     if (get_user_meta($user->ID, 'tozny_create_user', true)) {
 
@@ -82,9 +81,11 @@ function extra_profile_fields($user) {
                                 $new_device = $realm_api->realmUserDeviceAdd($tozny_user['user_id']);
                                 if ($new_device['return'] === 'ok') {
                                     ?>
+                                    <div style="margin-top: 10px;">
                                     <a href="<?= $new_device['secret_enrollment_url'] ?>">
                                         <img src="<?= $new_device['secret_enrollment_qr_url'] ?>" id="qr" class="center-block" style="height: 200px; width: 200px;">
                                     </a>
+                                    </div>
                                     <?php
                                 }
                                 else {
@@ -122,9 +123,11 @@ function extra_profile_fields($user) {
                                     }
 
                                     ?>
+                                    <div style="margin-top: 10px;">
                                     <a href="<?= $tozny_user['secret_enrollment_url'] ?>">
                                         <img src="<?= $tozny_user['secret_enrollment_qr_url'] ?>" id="qr" class="center-block" style="height: 200px; width: 200px;">
                                     </a>
+                                    </div>
                                     <?php
                                 }
                                 catch (Exception $e) {
@@ -143,9 +146,9 @@ function extra_profile_fields($user) {
                         jQuery(document).ready(function() {
                             jQuery('#tozny_activate').on('click', function () {
                                 if (jQuery(this).attr('checked') === 'checked') {
-                                    jQuery('#tozny_activate_description div').empty().append("<strong>Your Tozny account key will be displayed once you click the 'Update Profile' button below.</strong>");
+                                    jQuery('#tozny_activate_description strong').empty().append("<p>Your Tozny account key will be displayed once you click the 'Update Profile' button below.</p>");
                                 } else {
-                                    jQuery('#tozny_activate_description div').empty();
+                                    jQuery('#tozny_activate_description strong').empty();
                                 }
                             });
                         });
