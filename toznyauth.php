@@ -348,7 +348,7 @@ function displayToznyJavaScript ($api_url) {
 
 function displayToznyForm($api_url, $realm_key_id, $session_id, $qr_url, $mobile_url) {
 ?>
-    <div id="qr_code_login"></div>
+    <div id="qr_code_login" style="margin: 0 auto;"></div>
 
     <input type="hidden" name="realm_key_id" value="<?= htmlspecialchars($realm_key_id) ?>">
 
