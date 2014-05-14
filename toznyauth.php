@@ -2,11 +2,11 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress.
-Version: 	0.9.1
-Author: SEQRD, LLC
-Author URI: http://www.tozny.com
-Plugin URI: http://www.tozny.com
-License: Other
+Version: 	 0.9.2
+Author:      SEQRD, LLC
+Author URI:  http://www.tozny.com
+Plugin URI:  http://www.tozny.com#wordpress
+License:     GPLv2
 Text Domain: toznyauth
 */
 
