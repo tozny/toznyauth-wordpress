@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Tozny
-Description: Add Tozny as an authentication option to your WordPress.
+Description: Add Tozny as an authentication option to your WordPress blog.
 Version: 	 0.9.2
 Author:      SEQRD, LLC
 Author URI:  http://www.tozny.com
@@ -274,24 +274,32 @@ function add_tozny_lib() {
 
 function add_tozny_script() {
 
-    global $error;
-
     $API_URL = get_option('tozny_api_url');
     $REALM_KEY_ID = get_option('tozny_realm_key_id');
 
-    try {
-        $userApi = new Tozny_Remote_User_API($REALM_KEY_ID, $API_URL);
-        $challenge = $userApi->loginChallenge();
-        displayToznyForm(
-            $API_URL,
-            $REALM_KEY_ID,
-            $challenge['session_id'],
-            $challenge['qr_url'],
-            $challenge['mobile_url']
-        );
-    } catch (Exception $e) {
-        $error = "An error occurred while attempting to generate a Tozny login challenge. More Info: ". $e->getMessage();
-    }
+?>
+        <div id="qr_code_login" style="margin: 0 auto;"></div>
+
+        <input type="hidden" name="realm_key_id" value="<?= htmlspecialchars($REALM_KEY_ID) ?>">
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#qr_code_login').tozny({
+                    'type'              : 'login',
+                    'realm_key_id'      : '<?= $REALM_KEY_ID ?>',
+                    'api_url'           : '<?= $API_URL . 'index.php' ?>',
+                    'loading_image'     : '<?= $API_URL ?>interface/javascript/images/loading.gif',
+                    'login_button_image': '<?= $API_URL ?>interface/javascript/images/click-to-login-black.jpg',
+                    'form_type'         : 'custom',
+                    'form_id'           : 'loginform',
+                    'login_button_hide' : true,
+                    'debug'             : false
+                });
+
+            });
+        </script>
+
+<?php
 }
 
 function tozny_create_menu() {
@@ -346,33 +354,6 @@ function displayToznyJavaScript ($api_url) {
 }
 
 
-function displayToznyForm($api_url, $realm_key_id, $session_id, $qr_url, $mobile_url) {
-?>
-    <div id="qr_code_login" style="margin: 0 auto;"></div>
-
-    <input type="hidden" name="realm_key_id" value="<?= htmlspecialchars($realm_key_id) ?>">
-
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('#qr_code_login').tozny({
-                'type'              : 'verify',
-                'realm_key_id'      : '<?= $realm_key_id ?>',
-                'session_id'        : '<?= $session_id ?>',
-                'qr_url'            : '<?= $qr_url ?>',
-                'api_url'           : '<?= $api_url . 'index.php' ?>',
-                'loading_image'     : '<?= $api_url ?>interface/javascript/images/loading.gif',
-                'login_button_image': '<?= $api_url ?>interface/javascript/images/click-to-login-black.jpg',
-                'mobile_url'        : '<?= $mobile_url ?>',
-                'form_type'         : 'custom',
-                'form_id'           : 'loginform',
-                'debug'             : true
-            });
-
-        });
-    </script>
-
-<?php
-}
 
 
 function tozny_settings_page() {
