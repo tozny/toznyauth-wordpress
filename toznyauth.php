@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 0.9.2
+Version: 	 0.9.3
 Author:      SEQRD, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress
@@ -27,6 +27,7 @@ require_once 'ToznyRemoteRealmAPI.php';
 //=====================================================================
 // Wordpress hook callback functions.
 //=====================================================================
+add_action('login_enqueue_scripts','add_tozny_login_css');
 add_action('login_head','add_tozny_lib');
 add_action('login_form','add_tozny_script');
 add_action('admin_menu', 'tozny_create_menu');
@@ -189,6 +190,18 @@ function test_realm_key() {
     }
 }
 
+function add_tozny_login_css() {
+    ?>
+    <link href="https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/tozny.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        .toz-button {
+            margin: 0 auto;
+            padding-bottom: 20px;
+        }
+    </style>
+    <?php
+}
+
 function add_tozny_lib() {
 
     global $error;
@@ -276,9 +289,10 @@ function add_tozny_script() {
 
     $API_URL = get_option('tozny_api_url');
     $REALM_KEY_ID = get_option('tozny_realm_key_id');
+    $MODAL_ON_LOAD = get_option('tozny_modal_on_load');
 
 ?>
-        <div id="qr_code_login" style="margin: 0 auto;"></div>
+        <div id="qr_code_login" style="margin: 0 auto; text-align: center;"></div>
 
         <input type="hidden" name="realm_key_id" value="<?= htmlspecialchars($REALM_KEY_ID) ?>">
 
@@ -286,6 +300,7 @@ function add_tozny_script() {
             $(document).ready(function() {
                 $('#qr_code_login').tozny({
                     'type'              : 'login',
+                    'style'             : '<?= ($MODAL_ON_LOAD) ? 'modal' : 'button' ?>',
                     'realm_key_id'      : '<?= $REALM_KEY_ID ?>',
                     'api_url'           : '<?= $API_URL . 'index.php' ?>',
                     'loading_image'     : '<?= $API_URL ?>interface/javascript/images/loading.gif',
@@ -314,6 +329,7 @@ function register_tozny_settings() {
     register_setting( 'tozny-settings-group', 'tozny_realm_key_secret' );
     register_setting( 'tozny-settings-group', 'tozny_api_url' );
     register_setting( 'tozny-settings-group', 'tozny_allow_users_to_add_devices' );
+    register_setting( 'tozny-settings-group', 'tozny_modal_on_load' );
 }
 //=====================================================================
 
@@ -349,7 +365,8 @@ function distinguished($fields) {
 function displayToznyJavaScript ($api_url) {
 ?>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="<?= $api_url . 'interface/javascript/jquery.tozny.js' ?>"></script>
+    <!--script src="<?= $api_url . 'interface/jquery.tozny.js' ?>"></script-->
+    <script src="https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/jquery.tozny.js"></script>
 <?php
 }
 
@@ -390,6 +407,11 @@ function tozny_settings_page() {
                 <tr valign="top">
                     <th scope="row">Allow users to add devices?</th>
                     <td><input type="checkbox" name="tozny_allow_users_to_add_devices" <?php if ( 'on' == get_option('tozny_allow_users_to_add_devices') ) echo 'checked="checked"'; ?> /></td>
+                </tr>
+
+                <tr valign="top">
+                    <th scope="row">Show modal on login-page load?</th>
+                    <td><input type="checkbox" name="tozny_modal_on_load" <?php if ( 'on' == get_option('tozny_modal_on_load') ) echo 'checked="checked"'; ?> /></td>
                 </tr>
             </table>
 
