@@ -270,10 +270,9 @@ class Tozny_Remote_Realm_API
             'user_id' => $user_id
         );
 
-        $user_arr = $this->rawCall($args);
-        //TODO: Handle errors
-
-        return $user_arr['results'];
+        $result = $this->rawCall($args);
+        if (!empty($result['results'])) {return $result['results'];}
+        throw new Exception(sprintf("Failed userGet() request: user_id %s; result: %s", $user_id, json_encode($result)));
     }
 
 
