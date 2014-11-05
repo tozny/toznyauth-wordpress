@@ -1,15 +1,28 @@
 <?php
 /**
+ * Copyright 2013-2014 TOZNY, LLC. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ * http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+/**
  * The Remote Tozny API.
  *
  * This is the interface for the PHP Remote API for Tozny's login system.
  *
  * PHP version 5
  *
- * LICENSE: Copyright Tozny LLC, All Rights Reserved
  *
  * @category   Security
- * @copyright  2013 Tozny LLC
+ * @copyright  2014 Tozny LLC
  * @version    git: $Id$
  * @link       https://www.tozny.com
  * @since      File available since Release 1.0
@@ -17,19 +30,6 @@
  * @package    Tozny
  */
 
-
-/**
- * The Remote Tozny Realm API
- *
- * This is the interface for the PHP Remote User API for Tozny's login system.
- *
- * @category   Security
- * @package    Tozny
- * @author     Isaac Potoczny-Jones <ijones@tozny.com>
- * @copyright  2013 Tozny LLC
- * @link       https://www.tozny.com
- * @since      Class available since Release 1.0
- */
 class Tozny_Remote_Realm_API
 {
 
@@ -87,7 +87,7 @@ class Tozny_Remote_Realm_API
      *
      * @param string $signed_data - who's logging in
      * @param string $signature - the signature for the payload
-     * @return unknown
+     * @return mixed the decoded JSON data or FALSE
      */
     function verifyLogin($signed_data, $signature)
     {
@@ -202,12 +202,19 @@ class Tozny_Remote_Realm_API
      * @param array $metadata (optional)
      * @return The Tozny_API_User object if successful, otherwise false.
      */
-    function userAdd($defer = 'false', $metadata = NULL)
+    function userAdd($defer = 'false', $metadata = NULL, $pub_key = NULL)
     {
         $args = array(
-            'method' => 'realm.user_add',
-            'defer' => $defer
+            'method'  => 'realm.user_add',
+            'defer'   => $defer,
         );
+
+        // You must give a pub_key param, if you are not deferring enrollment.
+        if ($defer === 'false') {
+            if (!empty($pub_key)) $args['pub_key'] = $pub_key;
+            else throw new Exception("Cannot enroll without a public key! Did you mean to defer enrollment?");
+        }
+
         if (!empty ($metadata)) {
 
             $extras = self::base64UrlEncode(json_encode($metadata));
@@ -975,10 +982,9 @@ class Tozny_Remote_Realm_API
     /**
      * Checks the signatured on this data and returns the data. TODO Error checking.
      *
-     * @param Array   with 'signed_data' and 'signature'
+     * @param array $data containing 'signed_data' and 'signature'
      * or false if the signature does not match
-     * @param unknown $data
-     * @return The json_decoded, base64_decoded data
+     * @return mixed The json_decoded, base64_decoded data or FALSE
      */
     function checkSigGetData($data)
     {
