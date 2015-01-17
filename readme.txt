@@ -3,7 +3,7 @@ Contributors: kirk_at_tozny
 Donate link: http://www.tozny.com/
 Tags: authentication, auth
 Requires at least: 3.0.1
-Tested up to: 4.0
+Tested up to: 4.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,15 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 	3. Scan the QR code that appears using the Tozny app on your phone.
 
 == Changelog ==
+
+= 1.0.3 =
+ * Adding .gitignore file.
+ * Adding missing Changelog notes for v.1.0.2.
+ * moving Tested version from 4.0 to 4.1
+ * updated SDK libs to latest version
+  
+= 1.0.2 =
+ * Updated Tozny SDK-PHP files to use latest from https://github.com/tozny/sdk-php
 
 = 0.9.5 =
  * Updated info in this readme.txt file.

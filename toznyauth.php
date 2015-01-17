@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 1.0.2
+Version: 	 1.0.3
 Author:      TOZNY, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress

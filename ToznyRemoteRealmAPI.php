@@ -6,7 +6,7 @@
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
  *
- * http://aws.amazon.com/apache2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -124,11 +124,64 @@ class Tozny_Remote_Realm_API
     }
 
 
+    /**
+     * An alias for questionChallengeText.
+     *
+     * @param $question
+     * @param null $user_id
+     * @return mixed The response from the Tozny API
+     */
     function questionChallenge($question, $user_id = NULL)
+    {
+        if (is_string($question))
+            return $this->questionChallengeText($question, $user_id);
+        else if (is_array($question))
+            return $this->_callQuestionChallenge($question, $user_id);
+        else
+            return false;
+    }
+
+    /**
+     * Creates a text question challenge session.
+     *
+     * @param $question string The text to display to the user before signing the Tozny question challenge.
+     * @param  $user_id $user_id The user that should answer the question.
+     * @return mixed The response from the Tozny API
+     */
+    function questionChallengeText($question, $user_id = NULL)
+    {
+        $question = array(
+            "type" => "question",
+            "question" => $question
+        );
+        return $this->_callQuestionChallenge($question, $user_id);
+    }
+
+    /**
+     * Creates a callback question challenge session.
+     *
+     * @param $question string The text to display to the user before signing the Tozny question challenge.
+     * @param $successURL string The URL the user's mobile browser should be redirected to after successful authentication.
+     * @param $errorURL string The URL the user's mobile browser should be redirected to after unsuccessful authentication.
+     * @param $user_id string The user that should answer the question.
+     * @return mixed The response from the Tozny API
+     */
+    function questionChallengeCallback($question, $successURL, $errorURL, $user_id = NULL)
+    {
+        $question = array(
+            "type"    => "callback",
+            "question" => $question,
+            "success" => $successURL,
+            "error"   => $errorURL
+        );
+        return $this->_callQuestionChallenge($question, $user_id);
+    }
+
+    function _callQuestionChallenge($question, $user_id = NULL)
     {
         $args = array(
             'method' => 'realm.question_challenge',
-            'question' => $question
+            'question' => json_encode($question)
         );
 
         if (!empty($user_id)) {
