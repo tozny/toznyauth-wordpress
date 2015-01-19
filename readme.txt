@@ -1,4 +1,4 @@
-=== toznyauth ===
+=== Tozny Authentication ===
 Contributors: kirk_at_tozny
 Donate link: http://www.tozny.com/
 Tags: authentication, auth
