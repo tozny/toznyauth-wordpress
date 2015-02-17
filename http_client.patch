@@ -1,0 +1,57 @@
+diff --git a/ToznyRemoteRealmAPI.php b/ToznyRemoteRealmAPI.php
+index b6bb811..b6ccb5d 100644
+--- a/ToznyRemoteRealmAPI.php
++++ b/ToznyRemoteRealmAPI.php
+@@ -1026,9 +1026,10 @@ class Tozny_Remote_Realm_API
+ 
+         $sigArr = $this->_encodeAndSignArr(json_encode($args),
+             $this->_realm['realm_priv_key']);
+-        $encodedResult = file_get_contents($this->_api_url
++        $encodedResult = wp_remote_get($this->_api_url
+             . "?" . http_build_query($sigArr));
+-        return json_decode($encodedResult, true);
++        if (is_wp_error($encodedResult)) return $encodedResult;
++        else return json_decode($encodedResult['body'], true);
+     }
+ 
+ 
+diff --git a/ToznyRemoteUserAPI.php b/ToznyRemoteUserAPI.php
+index 1d3d6ba..44b3f9d 100644
+--- a/ToznyRemoteUserAPI.php
++++ b/ToznyRemoteUserAPI.php
+@@ -323,8 +323,9 @@ class Tozny_Remote_User_API
+             'realm_key_id'  => $this->_realm_key_id
+         );
+         $url = $this->_api_url . "?" . http_build_query($args);
+-        $strImg = file_get_contents($url);
+-        return $strImg;
++        $strImg = wp_remote_get($url);
++        if (is_wp_error($strImg)) return $strImg;
++        else return $strImg['body'];
+     }
+ 
+ 
+@@ -354,8 +355,9 @@ class Tozny_Remote_User_API
+             'realm_key_id'  => $this->_realm_key_id
+         );
+         $url = $this->_api_url . "?" . http_build_query($args);
+-        $strImg = file_get_contents($url);
+-        return $strImg;
++        $strImg = wp_remote_get($url);
++        if (is_wp_error($strImg)) return $strImg;
++        else return $strImg['body'];
+     }
+ 
+ 
+@@ -369,8 +371,9 @@ class Tozny_Remote_User_API
+     function rawCall(array $args)
+     {
+         $url = $this->_api_url . "?" . http_build_query($args);
+-        $encodedResult = file_get_contents($url);
+-        return json_decode($encodedResult, true);
++        $encodedResult = wp_remote_get($url);
++        if (is_wp_error($encodedResult)) return $encodedResult;
++        else return json_decode($encodedResult['body'], true);
+     }
+ 
+ 

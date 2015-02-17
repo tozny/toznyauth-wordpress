@@ -2,16 +2,19 @@
 /**
  * Copyright 2013-2014 TOZNY, LLC. or its affiliates. All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 /**
  * The Remote Tozny API.
@@ -279,19 +282,6 @@ class Tozny_Remote_Realm_API
         else return $user_arr;
     }
 
-
-    /* TODO */
-
-
-    /**
-     *
-     *
-     * @param unknown $user_temp_key
-     */
-    function userAddComplete($user_temp_key)
-    {
-
-    }
 
 
     /**
@@ -1026,9 +1016,10 @@ class Tozny_Remote_Realm_API
 
         $sigArr = $this->_encodeAndSignArr(json_encode($args),
             $this->_realm['realm_priv_key']);
-        $encodedResult = file_get_contents($this->_api_url
+        $encodedResult = wp_remote_get($this->_api_url
             . "?" . http_build_query($sigArr));
-        return json_decode($encodedResult, true);
+        if (is_wp_error($encodedResult)) return $encodedResult;
+        else return json_decode($encodedResult['body'], true);
     }
 
 
@@ -1206,5 +1197,3 @@ class Tozny_Remote_Realm_API
 }
 
 // Tozny_Remote_Realm_API class
-
-?>
