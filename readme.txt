@@ -41,6 +41,9 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 
 == Changelog ==
 
+= 1.1.2 =
+ * Changed usage of wp_redirect to wp_safe_redirect
+
 = 1.1.1 =
  * Added styles folder for moving inline and embedded CSS into separate CSS files.
 

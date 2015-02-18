@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 1.1.1
+Version: 	 1.1.2
 Author:      TOZNY, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress
@@ -272,7 +272,7 @@ function process_tozny_login_attempt() {
                 if ($wp_user) {
                     wp_set_auth_cookie($wp_user->ID);
                     wp_set_current_user($wp_user->ID);
-                    wp_redirect($redirect_to);
+                    wp_safe_redirect($redirect_to);
                 } // We did not found a corresponding WordPress user
                 else {
                     $error = 'Could not find a Wordpress user with a matching username or email address. Please contact your administrator.';
