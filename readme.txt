@@ -41,6 +41,9 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 
 == Changelog ==
 
+= 1.1.1 =
+ * Added styles folder for moving inline and embedded CSS into separate CSS files.
+
 = 1.1.0 =
  * Changed license of included Realm and User SDK files to GPLv2.
  * Updated included Realm and User SDK classes to use wp_remote_get() instead of file_get_contents().

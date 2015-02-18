@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 1.1.0
+Version: 	 1.1.1
 Author:      TOZNY, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress
@@ -203,9 +203,9 @@ function test_realm_key() {
  * Summary.
  *
  * Description.
- *
+ * Validates a Tozny login attempt.
  */
-function add_tozny_lib() {
+function process_tozny_login_attempt() {
 
     global $error;
 
@@ -356,8 +356,11 @@ function register_tozny_settings() {
  * Loads the Tozny javascript and CSS assets.
  */
 function tozny_login_enqueue_scripts () {
-    wp_register_style('tozny','https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/tozny.css');
-    wp_enqueue_style('tozny');
+    wp_register_style('tozny_style','https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/tozny.css');
+    wp_register_style('toznyauth_login_style', plugins_url('/styles/toznyauth_login.css', __FILE__));
+    wp_enqueue_style('tozny_style');
+    wp_enqueue_style('toznyauth_login_style');
+
     wp_register_script('jquery_tozny','https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/jquery.tozny.js',array('jquery'));
     wp_enqueue_script('jquery_tozny');
 }
@@ -451,12 +454,12 @@ function tozny_settings_page() {
 
 
 //=====================================================================
-// Wordpress hook callback functions.
+// WordPress hooks.
 //=====================================================================
 add_action('login_enqueue_scripts', 'tozny_login_enqueue_scripts');
-add_action('login_head','add_tozny_lib');
+add_action('login_head','process_tozny_login_attempt');
 add_action('login_form','add_tozny_script');
-add_action('admin_menu', 'tozny_create_menu');
+add_action('admin_menu','tozny_create_menu');
 add_action('load-toplevel_page_toznyauth/toznyauth','test_realm_key');
 
 # user editing their own profile page.
