@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 1.1.2
+Version: 	 1.1.3
 Author:      TOZNY, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress
@@ -24,6 +24,130 @@ require_once 'ToznyRemoteRealmAPI.php';
 //=====================================================================
 
 
+
+//=====================================================================
+function create_tozny_user_callback ()
+{
+
+    $json_response = array(
+        'error' => "Unauthorized.",
+        'status' => 403
+    );
+
+    if (current_user_can('edit_user',$_POST['user_id']) && ('on' === get_option('tozny_allow_users_to_add_devices')) ) {
+        $user = wp_get_current_user();
+        $API_URL = get_option('tozny_api_url');
+        $REALM_KEY_ID = get_option('tozny_realm_key_id');
+        $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
+        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
+        $tozny_user = null;
+        try {
+            # 1.  Get the email address from wprdpress
+            # 2.  lookup email address on tozny, to see if the users exists already, and we need to add a new device.
+            $tozny_user = $realm_api->userGetEmail($user->user_email);
+        } catch (Exception $e) {
+            $json_response = array(
+                'error' => 'Error while retrieving user record for given email',
+                'detail' => array(
+                    'message'  =>  $e->getMessage(),
+                    'wp_email' => $user->user_email
+                ),
+                'status' => 400
+            );
+        }
+
+        if (!is_null($tozny_user)) {
+            # 3a. if the user does not exist, call real.user_add, paint the QR_url
+            if ($tozny_user) {
+                $new_device = $realm_api->realmUserDeviceAdd($tozny_user['user_id']);
+                if ($new_device['return'] === 'ok') {
+                    $json_response = array(
+                        'secret_enrollment_url'    => $new_device['secret_enrollment_url'],
+                        'secret_enrollment_qr_url' => $new_device['secret_enrollment_qr_url'],
+                        'status' => 200
+                    );
+                } else {
+                    $json_response = array(
+                        'error' => 'Error while creating a new device key for the given email',
+                        'detail' => array(
+                            'message'       => array_shift($new_device['errors']['error_message']),
+                            'wp_email'      => $user->user_email,
+                            'tozny_user_id' => $tozny_user['user_id']
+                        ),
+                        'status' => 400
+                    );
+                }
+            } # 3b. if the user does exists in tozny, add a new user
+            else {
+                try {
+                    $realm_fields = $realm_api->fieldsGet();
+                    if ($realm_fields['return'] !== 'ok') {
+                        $json_response = array(
+                            'error'  => 'Error while creating a new Tozny user field info',
+                            'detail' => array(
+                                'message'  => array_shift($realm_fields['errors']['error_message']),
+                                'wp_email' => $user->user_email
+                            ),
+                            'status' => 400
+                        );
+                    }
+                    else {
+                        $user_meta = array();
+                        foreach ($realm_fields['results'] as $field) {
+                            // this will set like "tozny_email" and stuff like that
+                            if (!empty($field['maps_to'])) {
+                                switch ($field['maps_to']) {
+                                    case "tozny_email":
+                                        $user_meta[$field['field']] = $user->user_email;
+                                        break;
+                                    case "tozny_username":
+                                        $user_meta[$field['field']] = $user->user_login;
+                                        break;
+                                }
+                            }
+                        }
+                        $tozny_user = $realm_api->userAdd('true', $user_meta);
+                        if ($tozny_user['return'] !== 'ok') {
+                            $json_response = array(
+                                'error'  => 'Error while creating a new Tozny user record & device key',
+                                'detail' => array(
+                                    'message'  => array_shift($tozny_user['errors']['error_message']),
+                                    'wp_email' => $user->user_email
+                                ),
+                                'status' => 400
+                            );
+                        }
+                        else {
+                            $json_response = array(
+                                'secret_enrollment_url'    => $tozny_user['secret_enrollment_url'],
+                                'secret_enrollment_qr_url' => $tozny_user['secret_enrollment_qr_url'],
+                                'status' => 200
+                            );
+                        }
+                    }
+                } catch (Exception $e) {
+                    $json_response = array(
+                        'error'  => 'Error while creating new user record for given email',
+                        'detail' => array(
+                            'message'  => $e->getMessage(),
+                            'wp_email' => $user->user_email
+                        ),
+                        'status' => 400
+                    );
+                }
+            }
+        }
+    }
+
+    ob_clean(); // SEE: http://codex.wordpress.org/AJAX_in_Plugins#Debugging
+    header('Content-Type: application/json');
+    if ($json_response['status'] !== 200) {
+        wp_send_json_error($json_response);
+    } else {
+        wp_send_json_success($json_response);
+    }
+}
+//=====================================================================
 
 //=====================================================================
 /**
@@ -60,102 +184,6 @@ function extra_profile_fields($user) {
                 <td>
                     <input type="checkbox" name="tozny_activate" id="tozny_activate" <?php checked(get_user_meta($user->ID, 'tozny_activate', true), 'on'); ?>/>
                     <span id="tozny_activate_description" class="description">Use Tozny to log into this account.<strong></strong></span>
-                    <?php
-                    if (get_user_meta($user->ID, 'tozny_create_user', true)) {
-
-                        $API_URL = get_option('tozny_api_url');
-                        $REALM_KEY_ID = get_option('tozny_realm_key_id');
-                        $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
-                        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
-                        $tozny_user = null;
-                        try {
-                            # 1.  Get the email address from wprdpress
-                            # 2.  lookup email address on tozny, to see if the users exists already, and we need to add a new device.
-                            $tozny_user = $realm_api->userGetEmail($user->user_email);
-                        } catch (Exception $e) {
-                            $error_message = $e->getMessage();
-                            ?> <div id="message" class="error"><p><strong><?= esc_html($error_message) ?></strong></p></div><?php
-                        }
-
-                        if (!is_null($tozny_user)) {
-                            # 3a. if the user does not exist, call real.user_add, paint the QR_url
-                            if ($tozny_user) {
-                                $new_device = $realm_api->realmUserDeviceAdd($tozny_user['user_id']);
-                                if ($new_device['return'] === 'ok') {
-                                    ?>
-                                    <div style="margin-top: 10px;">
-                                    <a href="<?= esc_url($new_device['secret_enrollment_url']) ?>">
-                                        <img src="<?= esc_url($new_device['secret_enrollment_qr_url']) ?>" id="qr" class="center-block" style="height: 200px; width: 200px;">
-                                    </a>
-                                    </div>
-                                    <?php
-                                }
-                                else {
-                                    $error = array_shift($new_device['errors']);
-                                    ?> <div id="message" class="error"><p><strong><?= esc_html($error['error_message']) ?></strong></p></div><?php
-                                }
-                            }
-
-                            # 3b. if the user does exists, add a new user
-                            else {
-                                try {
-                                    $realm_fields = $realm_api->fieldsGet();
-                                    if ($realm_fields['return'] !== 'ok') {
-                                        $error = array_shift($realm_fields['errors']);
-                                        throw new Exception($error['error_message']);
-                                    }
-                                    $user_meta = array();
-                                    foreach ($realm_fields['results'] as $field) {
-                                        // this will set like "tozny_email" and stuff like that
-                                        if (!empty($field['maps_to'])) {
-                                            switch ($field['maps_to']) {
-                                                case "tozny_email":
-                                                    $user_meta[$field['field']] = $user->user_email;
-                                                    break;
-                                                case "tozny_username":
-                                                    $user_meta[$field['field']] = $user->user_login;
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                    $tozny_user = $realm_api->userAdd('true', $user_meta);
-                                    if ($tozny_user['return'] !== 'ok') {
-                                        $error = array_shift($tozny_user['errors']);
-                                        throw new Exception($error['error_message']);
-                                    }
-
-                                    ?>
-                                    <div style="margin-top: 10px;">
-                                    <a href="<?= esc_url($tozny_user['secret_enrollment_url']) ?>">
-                                        <img src="<?= esc_url($tozny_user['secret_enrollment_qr_url']) ?>" id="qr" class="center-block" style="height: 200px; width: 200px;">
-                                    </a>
-                                    </div>
-                                    <?php
-                                }
-                                catch (Exception $e) {
-                                    $error_message = $e->getMessage();
-                                    ?> <div id="message" class="error"><p><strong><?php echo(esc_html($error_message)); ?></strong></p></div><?php
-                                }
-
-                            }
-                        }
-                        update_user_meta($user->ID, 'tozny_create_user', false);
-                    }
-                    ?>
-
-                    <script type="text/javascript">
-
-                        jQuery(document).ready(function() {
-                            jQuery('#tozny_activate').on('click', function () {
-                                if (jQuery(this).attr('checked') === 'checked') {
-                                    jQuery('#tozny_activate_description strong').empty().append("<p>Your Tozny account key will be displayed once you click the 'Update Profile' button below.</p>");
-                                } else {
-                                    jQuery('#tozny_activate_description strong').empty();
-                                }
-                            });
-                        });
-
-                    </script>
                 </td>
             </tr>
         </table>
@@ -293,33 +321,11 @@ function process_tozny_login_attempt() {
  * Adds the Tozny javascript inline. TODO: move this into an enqueued asset.
  */
 function add_tozny_script() {
-
-    $API_URL = get_option('tozny_api_url');
     $REALM_KEY_ID = get_option('tozny_realm_key_id');
-    $MODAL_ON_LOAD = get_option('tozny_modal_on_load');
-
 ?>
         <div id="qr_code_login" style="margin: 0 auto; text-align: center;"></div>
 
         <input type="hidden" name="realm_key_id" value="<?php echo(esc_attr($REALM_KEY_ID)); ?>">
-
-        <script type="text/javascript">
-            jQuery(document).ready(function() {
-                jQuery('#qr_code_login').tozny({
-                    'type'              : 'login',
-                    'style'             : '<?php echo(($MODAL_ON_LOAD) ? 'modal' : 'button'); ?>',
-                    'realm_key_id'      : '<?php echo(esc_js($REALM_KEY_ID)); ?>',
-                    'api_url'           : '<?php echo(esc_js($API_URL) . 'index.php'); ?>',
-                    'loading_image'     : '<?php echo(esc_js($API_URL)); ?>interface/javascript/images/loading.gif',
-                    'login_button_image': '<?php echo(esc_js($API_URL)); ?>interface/javascript/images/click-to-login-black.jpg',
-                    'form_type'         : 'custom',
-                    'form_id'           : 'loginform',
-                    'login_button_hide' : true,
-                    'debug'             : false
-                });
-
-            });
-        </script>
 
 <?php
 }
@@ -356,6 +362,10 @@ function register_tozny_settings() {
  * Loads the Tozny javascript and CSS assets.
  */
 function tozny_login_enqueue_scripts () {
+    $API_URL = get_option('tozny_api_url');
+    $REALM_KEY_ID = get_option('tozny_realm_key_id');
+    $MODAL_ON_LOAD = get_option('tozny_modal_on_load');
+
     wp_register_style('tozny_style','https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/tozny.css');
     wp_register_style('toznyauth_login_style', plugins_url('/styles/toznyauth_login.css', __FILE__));
     wp_enqueue_style('tozny_style');
@@ -363,6 +373,41 @@ function tozny_login_enqueue_scripts () {
 
     wp_register_script('jquery_tozny','https://s3-us-west-2.amazonaws.com/tozny/production/interface/javascript/v2/jquery.tozny.js',array('jquery'));
     wp_enqueue_script('jquery_tozny');
+
+    wp_register_script('toznyauth_login_script', plugins_url('/scripts/toznyauth_login.js', __FILE__), array('jquery'));
+    wp_enqueue_script('toznyauth_login_script');
+    wp_localize_script('toznyauth_login_script', 'tozny_login_config', array(
+        'type'              => 'login',
+        'style'             => ($MODAL_ON_LOAD) ? 'modal' : 'button',
+        'realm_key_id'      => $REALM_KEY_ID,
+        'api_url'           => $API_URL . 'index.php',
+        'loading_image'     => $API_URL . 'interface/javascript/images/loading.gif',
+        'login_button_image'=> $API_URL . 'interface/javascript/images/click-to-login-black.jpg',
+        'form_type'         => 'custom',
+        'form_id'           => 'loginform',
+        'login_button_hide' => true,
+        'debug'             => false
+    ));
+}
+
+/**
+ * Summary.
+ *
+ * Description.
+ * Loads the toznyauth javascript assets.
+ */
+function tozny_profile_enqueue_scripts ($hook) {
+
+    if ($hook === 'profile.php') {
+        $user = wp_get_current_user();
+        wp_register_script('toznyauth_profile_script', plugins_url('/scripts/toznyauth_profile.js', __FILE__), array('jquery'));
+        wp_enqueue_script('toznyauth_profile_script');
+        wp_localize_script('toznyauth_profile_script', 'ajax_object', array(
+            'ajax_url'   => admin_url('admin-ajax.php'),
+            'user_id'    => $user->ID
+        ));
+    }
+
 }
 //=====================================================================
 
@@ -456,6 +501,7 @@ function tozny_settings_page() {
 //=====================================================================
 // WordPress hooks.
 //=====================================================================
+add_action('admin_enqueue_scripts', 'tozny_profile_enqueue_scripts');
 add_action('login_enqueue_scripts', 'tozny_login_enqueue_scripts');
 add_action('login_head','process_tozny_login_attempt');
 add_action('login_form','add_tozny_script');
@@ -465,4 +511,7 @@ add_action('load-toplevel_page_toznyauth/toznyauth','test_realm_key');
 # user editing their own profile page.
 add_action('personal_options_update', 'update_extra_profile_fields');
 add_action('profile_personal_options', 'extra_profile_fields' );
+
+# Ajax callbacks.
+add_action( 'wp_ajax_create_tozny_user', 'create_tozny_user_callback' );
 //=====================================================================

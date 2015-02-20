@@ -3,7 +3,7 @@ Contributors: kirk_at_tozny
 Donate link: http://www.tozny.com/
 Tags: admin, two-factor, login, password, username, user management, authentication, authenticator, security
 Requires at least: 3.0.1
-Tested up to: 4.1
+Tested up to: 4.1.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,11 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 	3. Scan the QR code that appears using the Tozny app on your phone.
 
 == Changelog ==
+
+= 1.1.3 =
+ * Ajax callback added for Tozny enrollment
+ * tested on WordPress 4.1.1
+ * Moved embedded JavaScript into external javascript files.
 
 = 1.1.2 =
  * Changed usage of wp_redirect to wp_safe_redirect
