@@ -41,6 +41,9 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 
 == Changelog ==
 
+= 1.1.4 =
+ * Updated enrollment QR to use ThickBox modal.
+
 = 1.1.3 =
  * Ajax callback added for Tozny enrollment
  * tested on WordPress 4.1.1

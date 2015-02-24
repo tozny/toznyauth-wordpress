@@ -1,0 +1,59 @@
+#TB_window {
+    overflow: hidden;
+}
+
+#device_setup{
+    width: 100%;
+    background: #fff;
+}
+
+#device_setup tbody {
+    padding:10px;
+}
+
+#device_setup .instruct {
+    padding:10px;
+    background:#eee;
+    color:#444;
+}
+
+#device_setup h4 {
+    font-size: 26px;
+    margin: 10px;
+}
+
+#device_setup #app_icons {
+    width: 100%;
+    text-align: center;
+}
+
+#device_setup #app_icons img {
+    width: 100%;
+    border: 0 solid transparent;
+}
+
+#device_setup #app_icons td {
+    padding: 10px;
+}
+
+#device_setup #app_icons td.apple {
+    text-align: right;
+}
+
+#device_setup #app_icons td.android {
+    text-align: left;
+}
+
+#qr_container p {
+    margin-top:10px;
+}
+
+#qr_container {
+    padding-left:25px;
+    text-align:center;
+}
+
+#qr {
+    height: 200px;
+    width: 200px;
+}

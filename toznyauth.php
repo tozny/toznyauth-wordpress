@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tozny
 Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 1.1.3
+Version: 	 1.1.4
 Author:      TOZNY, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress
@@ -140,7 +140,7 @@ function create_tozny_user_callback ()
     }
 
     ob_clean(); // SEE: http://codex.wordpress.org/AJAX_in_Plugins#Debugging
-    header('Content-Type: application/json');
+    header('Content-Type: application/json'); // wp_send_json_error not setting the JSON header >.<
     if ($json_response['status'] !== 200) {
         wp_send_json_error($json_response);
     } else {
@@ -180,10 +180,12 @@ function extra_profile_fields($user) {
         <h3>Tozny</h3>
         <table class="form-table">
             <tr>
-                <th><label for="tozny_activate">Use Tozny for this account?</label></th>
-                <td>
-                    <input type="checkbox" name="tozny_activate" id="tozny_activate" <?php checked(get_user_meta($user->ID, 'tozny_activate', true), 'on'); ?>/>
-                    <span id="tozny_activate_description" class="description">Use Tozny to log into this account.<strong></strong></span>
+                <th><span>Want to login using Tozny?</span></th>
+                <td><a href="#" id="tozny_activate">Click here to add a new device.</a>
+                    <script id="device_setup_template" type="text/html">
+                    <?php include("device_setup.php"); ?>
+                    </script>
+                    <div id="enrollment_qr" style="display: none; margin:0; padding:0;"></div>
                 </td>
             </tr>
         </table>
@@ -401,6 +403,9 @@ function tozny_profile_enqueue_scripts ($hook) {
     if ($hook === 'profile.php') {
         $user = wp_get_current_user();
         wp_register_script('toznyauth_profile_script', plugins_url('/scripts/toznyauth_profile.js', __FILE__), array('jquery'));
+        add_thickbox();
+        wp_register_style('toznyauth_profile_style', plugins_url('/styles/toznyauth_profile.css', __FILE__), array('thickbox'));
+        wp_enqueue_style('toznyauth_profile_style');
         wp_enqueue_script('toznyauth_profile_script');
         wp_localize_script('toznyauth_profile_script', 'ajax_object', array(
             'ajax_url'   => admin_url('admin-ajax.php'),
