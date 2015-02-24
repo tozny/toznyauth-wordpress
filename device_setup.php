@@ -29,7 +29,7 @@
             <div id="qr_container">
                 <p>If you're on your mobile phone, simply click it.</p>
                 <a href="{{secret_enrollment_url}}">
-                    <img src="{{secret_enrollment_qr_url}}" id="qr">
+                    <img src="{{secret_enrollment_qr_url}}" id="qr" />
                 </a>
                 <p>(Pssst - Don't share this QR code with anyone. It's unique to you.)</p>
             </div>
