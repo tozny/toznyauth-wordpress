@@ -19,7 +19,7 @@ jQuery(document).ready(function() {
                             }
                         }
                         jQuery('#enrollment_qr').empty().append(template);
-                        tb_show('Scan to enroll', '#TB_inline?=true&height=540&width=590&inlineId=enrollment_qr');
+                        tb_show('TOZNY: Your phone is the key.', '#TB_inline?=true&height=540&width=590&inlineId=enrollment_qr');
                     } else {
                         alert('Could not create a new Tozny user.');
                     }
