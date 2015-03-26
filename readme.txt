@@ -1,5 +1,5 @@
 === Tozny Authentication ===
-Contributors: kirk_at_tozny
+Contributors: kirk_at_tozny, ijones_at_tozny
 Donate link: http://www.tozny.com/
 Tags: admin, two-factor, login, password, username, user management, authentication, authenticator, security
 Requires at least: 3.0.1
@@ -40,6 +40,9 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 	3. Scan the QR code that appears using the Tozny app on your phone.
 
 == Changelog ==
+
+= 1.1.5 =
+ * Fixed bug that prevented non-admin users from adding devices.
 
 = 1.1.4 =
  * Updated enrollment QR to use ThickBox modal.

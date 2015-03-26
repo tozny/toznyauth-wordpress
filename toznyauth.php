@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: Tozny
-Description: Add Tozny as an authentication option to your WordPress blog.
-Version: 	 1.1.4
+Description: Add Tozny as an authentication option to your WordPress blog. Tozny lets your users log in with their phone. Its one or two-factor authentication system is easy to use, easy to integrate, and cryptographically secure. 
+Version: 	 1.1.5
 Author:      TOZNY, LLC
 Author URI:  http://www.tozny.com
 Plugin URI:  http://www.tozny.com#wordpress
@@ -34,8 +34,8 @@ function create_tozny_user_callback ()
         'status' => 403
     );
 
-    if (current_user_can('edit_user',$_POST['user_id']) && ('on' === get_option('tozny_allow_users_to_add_devices')) ) {
-        $user = wp_get_current_user();
+    $user = wp_get_current_user();
+    if (current_user_can('edit_user',$user->ID) && ('on' === get_option('tozny_allow_users_to_add_devices')) ) {
         $API_URL = get_option('tozny_api_url');
         $REALM_KEY_ID = get_option('tozny_realm_key_id');
         $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
