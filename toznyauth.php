@@ -1,16 +1,17 @@
 <?php
-/*
-Plugin Name: Tozny
-Description: Add Tozny as an authentication option to your WordPress blog. Tozny lets your users log in with their phone. Its one or two-factor authentication system is easy to use, easy to integrate, and cryptographically secure. 
-Version: 	 1.1.5
-Author:      TOZNY, LLC
-Author URI:  http://www.tozny.com
-Plugin URI:  http://www.tozny.com#wordpress
-License:     GPLv2
-Text Domain: toznyauth
+/**
+ * Plugin Name: Tozny
+ * Description: Add Tozny as an authentication option to your WordPress blog. Tozny lets your users log in with their phone. Its one or two-factor authentication system is easy to use, easy to integrate, and cryptographically secure.
+ * Version: 	1.1.6
+ * Author:      TOZNY, LLC
+ * Author URI:  https://www.tozny.com
+ * Plugin URI:  https://www.tozny.com#wordpress
+ * License:     GPLv2
+ * Text Domain: toznyauth
 */
 
-/*  Copyright 2014 - 2015 Tozny, LLC  (email: info@tozny.com)
+/**
+ *  Copyright 2014 - 2016 Tozny, LLC  (email: info@tozny.com)
  */
 
 /**
