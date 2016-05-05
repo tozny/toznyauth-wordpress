@@ -19,8 +19,10 @@ Text Domain: toznyauth
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) die('Sorry, you don&#39;t have direct access to this page.');
 
 //=====================================================================
-require_once 'ToznyRemoteUserAPI.php';
-require_once 'ToznyRemoteRealmAPI.php';
+require_once 'lib/tozny-sdk/ToznyRemoteUserAPI.php';
+require_once 'lib/tozny-sdk/ToznyRemoteRealmAPI.php';
+require_once 'src/RemoteUserAPI.php';  // WordPress-specific subclass
+require_once 'src/RemoteRealmAPI.php'; // WordPress-specific subclass
 //=====================================================================
 
 
