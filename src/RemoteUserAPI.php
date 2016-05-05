@@ -19,6 +19,21 @@ class Remote_User_API extends Tozny_Remote_User_API {
      */
     protected $_api_url;
 
+    public function __construct( $in_realm_key_id, $in_api_url = null ) {
+        if ( $in_api_url ) {
+            $this->_api_url = trailingslashit( $in_api_url );
+        } else {
+            $apiTmp = getenv("API_URL");
+            if ($apiTmp != false) {
+                $this->_api_url = trailingslashit( $apiTmp );
+            } else {
+                //TODO: Error
+            }
+        }
+
+        parent::__construct( $in_realm_key_id, $this->_api_url );
+    }
+
     /**
      * Get the QR code for the add_complete call
      *

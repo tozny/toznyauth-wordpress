@@ -41,8 +41,9 @@ function create_tozny_user_callback ()
         $API_URL = get_option('tozny_api_url');
         $REALM_KEY_ID = get_option('tozny_realm_key_id');
         $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
-        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
+        $realm_api = new Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
         $tozny_user = null;
+
         try {
             # 1.  Get the email address from wprdpress
             # 2.  lookup email address on tozny, to see if the users exists already, and we need to add a new device.
@@ -210,7 +211,7 @@ function test_realm_key() {
         $API_URL = get_option('tozny_api_url');
         $REALM_KEY_ID = get_option('tozny_realm_key_id');
         $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
-        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
+        $realm_api = new Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
         try {
             $resp = $realm_api->realmKeysGet();
             if (array_key_exists('return', $resp) && $resp['return'] === 'ok') {
@@ -250,7 +251,7 @@ function process_tozny_login_attempt() {
         $tozny_signature = $_POST['tozny_signature'];
         $tozny_signed_data = $_POST['tozny_signed_data'];
         $redirect_to = (array_key_exists('redirect_to', $_POST) && !empty($_POST['redirect_to'])) ? $_POST['redirect_to'] : '/';
-        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
+        $realm_api = new Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
         if ($realm_api->verifyLogin($tozny_signed_data, $tozny_signature)) {
             $fields = null;
             $data = null;
