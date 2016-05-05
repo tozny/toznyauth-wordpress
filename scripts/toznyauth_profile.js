@@ -1,6 +1,6 @@
 
 jQuery( document ).ready(function() {
-    jQuery( document.getelementById( 'tozny_activate' ) ).on( 'click', function () {
+    jQuery( document.getElementById( 'tozny_activate' ) ).on( 'click', function () {
             var request_data = {
                 'action': 'create_tozny_user'
             };
@@ -19,14 +19,14 @@ jQuery( document ).ready(function() {
                             }
                         }
                         jQuery( document.getElementById( 'enrollment_qr' ) ).empty().append(template);
-                        tb_show('TOZNY: Your phone is the key.', '#TB_inline?=true&height=540&width=590&inlineId=enrollment_qr');
+                        tb_show( ajax_object.your_phone_is_the_key, '#TB_inline?=true&height=540&width=590&inlineId=enrollment_qr' );
                     } else {
-                        alert('Could not create a new Tozny user.');
+                        alert( ajax_object.could_not_create );
                     }
                 },
                 error: function (_jqXHR,textStatus, errorThrown ) {
-                    'console' in window && console.log('Could not create new Tozny user: '+ textStatus + " -- " +errorThrown);
-                    alert('Could not complete request to create a new Tozny user.');
+                    'console' in window && console.log( ajax_object.could_not_create + ' ' + textStatus + " -- " + errorThrown );
+                    alert( ajax_object.bad_user_request );
                 }
             } );
             return false;

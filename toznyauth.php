@@ -411,8 +411,11 @@ function tozny_profile_enqueue_scripts ($hook) {
         wp_enqueue_style('toznyauth_profile_style');
         wp_enqueue_script('toznyauth_profile_script');
         wp_localize_script('toznyauth_profile_script', 'ajax_object', array(
-            'ajax_url'   => admin_url('admin-ajax.php'),
-            'user_id'    => $user->ID
+            'ajax_url'              => admin_url('admin-ajax.php'),
+            'user_id'               => $user->ID,
+            'bad_user_request'      => esc_html__( 'Could not complete request to create a new Tozny user.', 'toznyauth' ),
+            'could_not_create'      => esc_html__( 'Could not create a new Tozny user.', 'toznyauth' ),
+            'your_phone_is_the_key' => esc_html__( 'TOZNY: Your phone is the key.', 'toznyauth' ),
         ));
     }
 
