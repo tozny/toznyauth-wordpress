@@ -5,7 +5,7 @@
     <tbody>
     <tr>
         <td colspan="2" class="instruct">
-            <h4>1. Download the app</h4>
+            <h4><?php esc_html_e( '1. Download the app', 'toznyauth' ); ?></h4>
             <table id="app_icons">
                 <tbody><tr>
                     <td class="apple">
@@ -25,13 +25,13 @@
 
     <tr>
         <td colspan="2" class="instruct">
-            <h4>2. Use the app to scan the QR code below</h4>
+            <h4><?php esc_html_e( '2. Use the app to scan the QR code below', 'toznyauth' ); ?></h4>
             <div id="qr_container">
-                <p>If you're on your mobile phone, simply click it.</p>
+                <p><?php esc_html_e( "If you're on your mobile phone, simply click it.", 'toznyauth' ); ?></p>
                 <a href="{{secret_enrollment_url}}">
                     <img src="{{secret_enrollment_qr_url}}" id="qr" />
                 </a>
-                <p>(Pssst - Don't share this QR code with anyone. It's unique to you.)</p>
+                <p><?php esc_html_e( "(Pssst - Don't share this QR code with anyone. It's unique to you.)", 'toznyauth' ); ?></p>
             </div>
         </td>
     </tr>

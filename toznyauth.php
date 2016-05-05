@@ -180,11 +180,11 @@ function update_extra_profile_fields($user_id) {
 function extra_profile_fields($user) {
     if (current_user_can('edit_user',$user->ID) && ('on' === get_option('tozny_allow_users_to_add_devices')) ) {
 ?>
-        <h3>Tozny</h3>
+        <h3><?php esc_html_e( 'Tozny', 'toznyauth' ); ?></h3>
         <table class="form-table">
             <tr>
-                <th><span>Want to login using Tozny?</span></th>
-                <td><a href="#" id="tozny_activate">Click here to add a new device.</a>
+                <th><span><?php esc_html_e( 'Want to login using Tozny?', 'toznyauth' ); ?></span></th>
+                <td><a href="#" id="tozny_activate"><?php esc_html_e( 'Click here to add a new device.', 'toznyauth' ); ?></a>
                     <script id="device_setup_template" type="text/html">
                     <?php include("device_setup.php"); ?>
                     </script>
@@ -342,7 +342,14 @@ function add_tozny_script() {
  * Builds the left-hand admin nav item & icon for the Tozny plugin.
  */
 function tozny_create_menu() {
-    add_menu_page('Tozny Plugin Settings', 'Tozny', 'administrator', __FILE__, 'tozny_settings_page',plugins_url('/images/icon.png', __FILE__));
+    add_menu_page(
+        __( 'Tozny Plugin Settings', 'toznyauth' ),
+        __( 'Tozny', 'toznyauth' ),
+        'administrator',
+        __FILE__,
+        'tozny_settings_page',
+        plugins_url( '/images/icon.png', __FILE__ )
+    );
     add_action( 'admin_init', 'register_tozny_settings' );
 }
 
@@ -464,7 +471,7 @@ function tozny_settings_page() {
     global $REALM_KEY_TEST_MESSAGE;
     ?>
     <div class="wrap">
-        <h2>Tozny</h2>
+        <h2><?php esc_html_e( 'Tozny', 'toznyauth' ); ?></h2>
 
         <form method="post" action="options.php">
             <?php settings_fields( 'tozny-settings-group' ); ?>
@@ -476,27 +483,27 @@ function tozny_settings_page() {
             <?php endif; ?>
             <table class="form-table">
                 <tr valign="top">
-                    <th scope="row">API URL</th>
+                    <th scope="row"><?php esc_html_e( 'API URL', 'toznyauth' ); ?></th>
                     <td><input type="text" name="tozny_api_url" value="<?php $api_url = get_option('tozny_api_url'); echo(empty($api_url) ? 'https://api.tozny.com/' : esc_url($api_url)); ?>" /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Realm Key ID</th>
+                    <th scope="row"><?php esc_html_e( 'Realm Key ID', 'toznyauth' ); ?></th>
                     <td><input type="text" name="tozny_realm_key_id" value="<?php echo(esc_attr(get_option('tozny_realm_key_id'))); ?>" /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Realm Key Secret</th>
+                    <th scope="row"><?php esc_html_e( 'Realm Key Secret', 'toznyauth' ); ?></th>
                     <td><input type="text" name="tozny_realm_key_secret" value="<?php echo(esc_attr(get_option('tozny_realm_key_secret'))); ?>" /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Allow users to add devices?</th>
+                    <th scope="row"><?php esc_html_e( 'Allow users to add devices?', 'toznyauth' ); ?></th>
                     <td><input type="checkbox" name="tozny_allow_users_to_add_devices" <?php checked(get_option('tozny_allow_users_to_add_devices'), 'on'); ?> /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Show modal on login-page load?</th>
+                    <th scope="row"><?php esc_html_e( 'Show modal on login-page load?', 'toznyauth' ); ?></th>
                     <td><input type="checkbox" name="tozny_modal_on_load" <?php checked(get_option('tozny_modal_on_load'), 'on'); ?> /></td>
                 </tr>
             </table>
