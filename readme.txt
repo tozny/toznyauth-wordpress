@@ -3,7 +3,7 @@ Contributors:      kirk_at_tozny, ijones_at_tozny, ericmann
 Donate link:       https://www.tozny.com/
 Tags:              admin, two-factor, login, password, username, user management, authentication, authenticator, security
 Requires at least: 3.0.1
-Tested up to:      4.5.1
+Tested up to:      4.6
 License:           GPLv2
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
