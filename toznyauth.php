@@ -264,22 +264,22 @@ function process_tozny_login_attempt() {
                     $fields = $rawCall['results'];
                 } else {
                     $more_info = (array_key_exists('return', $rawCall) && $rawCall['return'] === 'error') ? print_r($rawCall['errors'], true) : "";
-                    $error = $error = 'Error while retrieving fields from Tozny.' . esc_html($more_info);
+                    $error = esc_html__( 'Error while retrieving fields from Tozny.', 'tozauth' ) . esc_html($more_info);
                 }
             } catch (Exception $e) {
-                $error = 'Error while retrieving fields from Tozny. More info: ' . esc_html($e->getMessage());
+                $error = esc_html__( 'Error while retrieving fields from Tozny. More info: ', 'tozauth' ) . esc_html($e->getMessage());
             }
 
             try {
                 $data = $realm_api->decodeSignedData($tozny_signed_data);
             } catch (Exception $e) {
-                $error = 'Error while decoding signed data from Tozny. More info: ' . esc_html($e->getMessage());
+                $error = esc_html__( 'Error while decoding signed data from Tozny. More info: ', 'tozauth' ) . esc_html($e->getMessage());
             }
 
             try {
                 $user = $realm_api->userGet($data['user_id']);
             } catch (Exception $e) {
-                $error = 'Error while retrieving user data from Tozny. More info: ' . esc_html($e->getMessage());
+                $error = esc_html__( 'Error while retrieving user data from Tozny. More info: ', 'tozauth' ) . esc_html($e->getMessage());
             }
 
             // Dude, where's your monad?
@@ -309,13 +309,13 @@ function process_tozny_login_attempt() {
                     wp_safe_redirect($redirect_to);
                 } // We did not found a corresponding WordPress user
                 else {
-                    $error = 'Could not find a Wordpress user with a matching username or email address. Please contact your administrator.';
+                    $error = esc_html__( 'Could not find a WordPress user with a matching username or email address. Please contact your administrator.', 'tozauth' );
                 }
 
             }
 
         } else {
-            $error = 'Session verification failed. Please contact your administrator.';
+            $error = esc_html__( 'Session verification failed. Please contact your administrator.', 'tozauth' );
         }
     }
 } // add_tozny_lib
