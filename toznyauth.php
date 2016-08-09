@@ -173,10 +173,11 @@ function update_extra_profile_fields($user_id) {
 }
 
 /**
- * Summary.
+ * Update Tozny profile fields
  *
- * Description.
- * @param $user
+ * No nonce check is required here as this is not a custom form but a default WordPress form and callback.
+ *
+ * @param WP_User $user
  */
 function extra_profile_fields($user) {
     if (current_user_can('edit_user',$user->ID) && ('on' === get_option('tozny_allow_users_to_add_devices')) ) {
@@ -234,10 +235,10 @@ function test_realm_key() {
 
 
 /**
- * Summary.
- *
- * Description.
  * Validates a Tozny login attempt.
+ *
+ * No nonce check is required for $_POST validation as this is loading on the login page and not using the POSTed data
+ * within WordPress.
  */
 function process_tozny_login_attempt() {
 
