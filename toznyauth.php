@@ -11,7 +11,7 @@
 */
 
 /**
- *  Copyright 2014 - 2016 Tozny, LLC  (email: info@tozny.com)
+ *  Copyright 2014 - 2017 Tozny, LLC  (email: info@tozny.com)
  */
 
 /**
