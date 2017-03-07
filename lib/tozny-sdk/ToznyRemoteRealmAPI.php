@@ -2,19 +2,16 @@
 /**
  * Copyright 2013-2014 TOZNY, LLC. or its affiliates. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 /**
  * The Remote Tozny API.
@@ -130,7 +127,7 @@ class Tozny_Remote_Realm_API
     /**
      * An alias for questionChallengeText.
      *
-     * @param $question
+     * @param string|array $question
      * @param null $user_id
      * @return mixed The response from the Tozny API
      */
@@ -147,8 +144,8 @@ class Tozny_Remote_Realm_API
     /**
      * Creates a text question challenge session.
      *
-     * @param $question string The text to display to the user before signing the Tozny question challenge.
-     * @param  $user_id $user_id The user that should answer the question.
+     * @param string $question The text to display to the user before signing the Tozny question challenge.
+     * @param string $user_id The user that should answer the question.
      * @return mixed The response from the Tozny API
      */
     function questionChallengeText($question, $user_id = NULL)
@@ -163,10 +160,10 @@ class Tozny_Remote_Realm_API
     /**
      * Creates a callback question challenge session.
      *
-     * @param $question string The text to display to the user before signing the Tozny question challenge.
-     * @param $successURL string The URL the user's mobile browser should be redirected to after successful authentication.
-     * @param $errorURL string The URL the user's mobile browser should be redirected to after unsuccessful authentication.
-     * @param $user_id string The user that should answer the question.
+     * @param string $question The text to display to the user before signing the Tozny question challenge.
+     * @param string $successURL The URL the user's mobile browser should be redirected to after successful authentication.
+     * @param string $errorURL The URL the user's mobile browser should be redirected to after unsuccessful authentication.
+     * @param string $user_id The user that should answer the question.
      * @return mixed The response from the Tozny API
      */
     function questionChallengeCallback($question, $successURL, $errorURL, $user_id = NULL)
@@ -341,14 +338,14 @@ class Tozny_Remote_Realm_API
      * @return unknown
      */
     function usersGet($term = NULL,
-                      $meta_advanced = NULL,
-                      $tozny_advanced = NULL,
-                      $meta_fields = NULL,
-                      $tozny_fields = NULL,
-                      $userid = NULL,
-                      $rows = NULL,
-                      $offset = NULL,
-                      $page = NULL)
+        $meta_advanced = NULL,
+        $tozny_advanced = NULL,
+        $meta_fields = NULL,
+        $tozny_fields = NULL,
+        $userid = NULL,
+        $rows = NULL,
+        $offset = NULL,
+        $page = NULL)
     {
 
         if (!empty($meta_advanced)) {
@@ -623,7 +620,7 @@ class Tozny_Remote_Realm_API
      * @return Postback data like the postback_id
      */
     function postbackAdd($name, $postback_url, $postback_type, $postback_hook,
-                         $postback_triggers = NULL)
+        $postback_triggers = NULL)
     {
         return $this->rawCall(
             array(
@@ -980,7 +977,7 @@ class Tozny_Remote_Realm_API
     }
 
     function realmActivity($user_id = NULL, $realm_key_id_param = NULL,
-                           $user_key_id = NULL, $offset = 0, $rows = 20, $page = NULL)
+        $user_key_id = NULL, $offset = 0, $rows = 20, $page = NULL)
     {
         $args = array(
             'method' => 'realm.activity',
@@ -989,12 +986,35 @@ class Tozny_Remote_Realm_API
             'user_key_id' => $user_key_id,
             'offset' => $offset,
             'rows' => $rows,
-            'page' => $page
+            'page' => $page,
         );
 
         return $this->rawCall($args);
     }
 
+
+    /**
+     * Perform a realm OTP request
+     *
+     * @param string $presence - presence token
+     * @param string $destination - email or phone number
+     * @param string $type - email, sms-otp-6, sms-otp-8
+     * @param string $data - data to be signed along with the request
+     * @return mixed Success or error json objects.
+     */
+    function realmOTPChallenge($presence,$type=null,$destination=null, $data=null)
+    {
+        return $this->rawCall(
+            array(
+                'method' => 'realm.otp_challenge',
+                'realm_key_id' => $this->_realm['realm_key_id'],
+                'data' => $data,
+                'type' => $type,
+                'destination' => $destination,
+                'presence' => $presence,
+            )
+        );
+    }
 
     /**
      * Internal function to convert an array into a query and issue it
@@ -1016,10 +1036,9 @@ class Tozny_Remote_Realm_API
 
         $sigArr = $this->_encodeAndSignArr(json_encode($args),
             $this->_realm['realm_priv_key']);
-        $encodedResult = wp_remote_get($this->_api_url
+        $encodedResult = file_get_contents($this->_api_url
             . "?" . http_build_query($sigArr));
-        if (is_wp_error($encodedResult)) return $encodedResult;
-        else return json_decode($encodedResult['body'], true);
+        return json_decode($encodedResult, true);
     }
 
 

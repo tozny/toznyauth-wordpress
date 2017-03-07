@@ -1,11 +1,11 @@
 === Tozny Authentication ===
-Contributors: kirk_at_tozny, ijones_at_tozny
-Donate link: http://www.tozny.com/
-Tags: admin, two-factor, login, password, username, user management, authentication, authenticator, security
+Contributors:      kirk_at_tozny, ijones_at_tozny, ericmann
+Donate link:       https://www.tozny.com/
+Tags:              admin, two-factor, login, password, username, user management, authentication, authenticator, security
 Requires at least: 3.0.1
-Tested up to: 4.1.1
-License: GPLv2
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Tested up to:      4.7.3
+License:           GPLv2
+License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
 Add TOZNY as an authentication option to your WordPress.
 
@@ -40,6 +40,13 @@ The toznyauth WordPress plugin adds TOZNY as an authentication option to your Wo
 	3. Scan the QR code that appears using the Tozny app on your phone.
 
 == Changelog ==
+
+= 1.1.6 =
+ * Verified latest WordPress compatibility
+ * Verified latest jQuery compatibility
+ * Moved stock Tozny PHP SDK into its own folder for ease of updates
+ * Added localization support for the 'toznyauth' textdomain
+ * Updated authorization redirects to avoid a "Headers already sent" error
 
 = 1.1.5 =
  * Fixed bug that prevented non-admin users from adding devices.

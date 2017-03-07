@@ -2,19 +2,16 @@
 /**
  * Copyright 2013-2014 TOZNY, LLC. or its affiliates. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 /**
  * The Remote Tozny User API.
@@ -138,7 +135,9 @@ class Tozny_Remote_User_API
             'realm_key_id' => $this->_realm_key_id,
             'user_id'      => $user['user_id'],
             'user_key_id'  => $user['user_key_id'],
-            'session_id'   => $challenge['session_id']
+            'session_id'   => $challenge['session_id'],
+            'push_token'   => isset($user['push_token']) ? $user['push_token'] : '',    // not required
+            'push_platform'=> isset($user['push_platform']) ? $user['push_platform'] : ''  // not required
         );
 
         $response = '';
@@ -298,6 +297,47 @@ class Tozny_Remote_User_API
         return $newUser;
     }
 
+    /**
+     * Perform a user OTP request
+     *
+     * @param string $presence - presence token
+     * @param string $destination - email or phone number
+     * @param string $type - email, sms-otp-6, sms-otp-8
+     * @return mixed Success or error json objects.
+     */
+    function userOTPChallenge($presence,$type=null,$destination=null)
+    {
+        return $this->rawCall(
+            array(
+                'method' => 'user.otp_challenge',
+                'realm_key_id' => $this->_realm_key_id,
+                'type' => $type,
+                'destination' => $destination,
+                'presence' => $presence
+            )
+        );
+    }
+
+    /**
+     * Perform a user OTP request
+     *
+     * @param string $presence - presence token
+     * @param string $destination - email or phone number
+     * @param string $type - email, sms-otp-6, sms-otp-8
+     * @return mixed Success or error json objects.
+     */
+    function userOTPResult($session_id,$otp)
+    {
+        return $this->rawCall(
+            array(
+                'method' => 'user.otp_result',
+                'realm_key_id' => $this->_realm_key_id,
+                'session_id' => $session_id,
+                'otp' => $otp
+            )
+        );
+    }
+
 
     /**
      * Check whether this session is expired, failed, or succeeded.
@@ -326,9 +366,8 @@ class Tozny_Remote_User_API
             'realm_key_id'  => $this->_realm_key_id
         );
         $url = $this->_api_url . "?" . http_build_query($args);
-        $strImg = wp_remote_get($url);
-        if (is_wp_error($strImg)) return $strImg;
-        else return $strImg['body'];
+        $strImg = file_get_contents($url);
+        return $strImg;
     }
 
 
@@ -358,9 +397,8 @@ class Tozny_Remote_User_API
             'realm_key_id'  => $this->_realm_key_id
         );
         $url = $this->_api_url . "?" . http_build_query($args);
-        $strImg = wp_remote_get($url);
-        if (is_wp_error($strImg)) return $strImg;
-        else return $strImg['body'];
+        $strImg = file_get_contents($url);
+        return $strImg;
     }
 
 
@@ -374,9 +412,8 @@ class Tozny_Remote_User_API
     function rawCall(array $args)
     {
         $url = $this->_api_url . "?" . http_build_query($args);
-        $encodedResult = wp_remote_get($url);
-        if (is_wp_error($encodedResult)) return $encodedResult;
-        else return json_decode($encodedResult['body'], true);
+        $encodedResult = file_get_contents($url);
+        return json_decode($encodedResult, true);
     }
 
 

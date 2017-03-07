@@ -1,16 +1,17 @@
 <?php
-/*
-Plugin Name: Tozny
-Description: Add Tozny as an authentication option to your WordPress blog. Tozny lets your users log in with their phone. Its one or two-factor authentication system is easy to use, easy to integrate, and cryptographically secure. 
-Version: 	 1.1.5
-Author:      TOZNY, LLC
-Author URI:  http://www.tozny.com
-Plugin URI:  http://www.tozny.com#wordpress
-License:     GPLv2
-Text Domain: toznyauth
+/**
+ * Plugin Name: Tozny
+ * Description: Add Tozny as an authentication option to your WordPress blog. Tozny lets your users log in with their phone. Its one or two-factor authentication system is easy to use, easy to integrate, and cryptographically secure.
+ * Version: 	1.1.6
+ * Author:      TOZNY, LLC
+ * Author URI:  https://www.tozny.com
+ * Plugin URI:  https://www.tozny.com#wordpress
+ * License:     GPLv2
+ * Text Domain: toznyauth
 */
 
-/*  Copyright 2014 - 2015 Tozny, LLC  (email: info@tozny.com)
+/**
+ *  Copyright 2014 - 2017 Tozny, LLC  (email: info@tozny.com)
  */
 
 /**
@@ -19,8 +20,10 @@ Text Domain: toznyauth
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) die('Sorry, you don&#39;t have direct access to this page.');
 
 //=====================================================================
-require_once 'ToznyRemoteUserAPI.php';
-require_once 'ToznyRemoteRealmAPI.php';
+require_once 'lib/tozny-sdk/ToznyRemoteUserAPI.php';
+require_once 'lib/tozny-sdk/ToznyRemoteRealmAPI.php';
+require_once 'src/RemoteUserAPI.php';  // WordPress-specific subclass
+require_once 'src/RemoteRealmAPI.php'; // WordPress-specific subclass
 //=====================================================================
 
 
@@ -39,8 +42,9 @@ function create_tozny_user_callback ()
         $API_URL = get_option('tozny_api_url');
         $REALM_KEY_ID = get_option('tozny_realm_key_id');
         $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
-        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
+        $realm_api = new Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
         $tozny_user = null;
+
         try {
             # 1.  Get the email address from wprdpress
             # 2.  lookup email address on tozny, to see if the users exists already, and we need to add a new device.
@@ -169,19 +173,20 @@ function update_extra_profile_fields($user_id) {
 }
 
 /**
- * Summary.
+ * Update Tozny profile fields
  *
- * Description.
- * @param $user
+ * No nonce check is required here as this is not a custom form but a default WordPress form and callback.
+ *
+ * @param WP_User $user
  */
 function extra_profile_fields($user) {
     if (current_user_can('edit_user',$user->ID) && ('on' === get_option('tozny_allow_users_to_add_devices')) ) {
 ?>
-        <h3>Tozny</h3>
+        <h3><?php esc_html_e( 'Tozny', 'toznyauth' ); ?></h3>
         <table class="form-table">
             <tr>
-                <th><span>Want to login using Tozny?</span></th>
-                <td><a href="#" id="tozny_activate">Click here to add a new device.</a>
+                <th><span><?php esc_html_e( 'Want to login using Tozny?', 'toznyauth' ); ?></span></th>
+                <td><a href="#" id="tozny_activate"><?php esc_html_e( 'Click here to add a new device.', 'toznyauth' ); ?></a>
                     <script id="device_setup_template" type="text/html">
                     <?php include("device_setup.php"); ?>
                     </script>
@@ -208,7 +213,7 @@ function test_realm_key() {
         $API_URL = get_option('tozny_api_url');
         $REALM_KEY_ID = get_option('tozny_realm_key_id');
         $REALM_KEY_SECRET = get_option('tozny_realm_key_secret');
-        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
+        $realm_api = new Remote_Realm_API($REALM_KEY_ID,$REALM_KEY_SECRET,$API_URL);
         try {
             $resp = $realm_api->realmKeysGet();
             if (array_key_exists('return', $resp) && $resp['return'] === 'ok') {
@@ -230,10 +235,10 @@ function test_realm_key() {
 
 
 /**
- * Summary.
- *
- * Description.
  * Validates a Tozny login attempt.
+ *
+ * No nonce check is required for $_POST validation as this is loading on the login page and not using the POSTed data
+ * within WordPress.
  */
 function process_tozny_login_attempt() {
 
@@ -248,7 +253,7 @@ function process_tozny_login_attempt() {
         $tozny_signature = $_POST['tozny_signature'];
         $tozny_signed_data = $_POST['tozny_signed_data'];
         $redirect_to = (array_key_exists('redirect_to', $_POST) && !empty($_POST['redirect_to'])) ? $_POST['redirect_to'] : '/';
-        $realm_api = new Tozny_Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
+        $realm_api = new Remote_Realm_API($REALM_KEY_ID, $REALM_KEY_SECRET, $API_URL);
         if ($realm_api->verifyLogin($tozny_signed_data, $tozny_signature)) {
             $fields = null;
             $data = null;
@@ -260,22 +265,22 @@ function process_tozny_login_attempt() {
                     $fields = $rawCall['results'];
                 } else {
                     $more_info = (array_key_exists('return', $rawCall) && $rawCall['return'] === 'error') ? print_r($rawCall['errors'], true) : "";
-                    $error = $error = 'Error while retrieving fields from Tozny.' . esc_html($more_info);
+                    $error = esc_html__( 'Error while retrieving fields from Tozny.', 'tozauth' ) . esc_html($more_info);
                 }
             } catch (Exception $e) {
-                $error = 'Error while retrieving fields from Tozny. More info: ' . esc_html($e->getMessage());
+                $error = esc_html__( 'Error while retrieving fields from Tozny. More info: ', 'tozauth' ) . esc_html($e->getMessage());
             }
 
             try {
                 $data = $realm_api->decodeSignedData($tozny_signed_data);
             } catch (Exception $e) {
-                $error = 'Error while decoding signed data from Tozny. More info: ' . esc_html($e->getMessage());
+                $error = esc_html__( 'Error while decoding signed data from Tozny. More info: ', 'tozauth' ) . esc_html($e->getMessage());
             }
 
             try {
                 $user = $realm_api->userGet($data['user_id']);
             } catch (Exception $e) {
-                $error = 'Error while retrieving user data from Tozny. More info: ' . esc_html($e->getMessage());
+                $error = esc_html__( 'Error while retrieving user data from Tozny. More info: ', 'tozauth' ) . esc_html($e->getMessage());
             }
 
             // Dude, where's your monad?
@@ -305,13 +310,13 @@ function process_tozny_login_attempt() {
                     wp_safe_redirect($redirect_to);
                 } // We did not found a corresponding WordPress user
                 else {
-                    $error = 'Could not find a Wordpress user with a matching username or email address. Please contact your administrator.';
+                    $error = esc_html__( 'Could not find a WordPress user with a matching username or email address. Please contact your administrator.', 'tozauth' );
                 }
 
             }
 
         } else {
-            $error = 'Session verification failed. Please contact your administrator.';
+            $error = esc_html__( 'Session verification failed. Please contact your administrator.', 'tozauth' );
         }
     }
 } // add_tozny_lib
@@ -339,7 +344,14 @@ function add_tozny_script() {
  * Builds the left-hand admin nav item & icon for the Tozny plugin.
  */
 function tozny_create_menu() {
-    add_menu_page('Tozny Plugin Settings', 'Tozny', 'administrator', __FILE__, 'tozny_settings_page',plugins_url('/images/icon.png', __FILE__));
+    add_menu_page(
+        __( 'Tozny Plugin Settings', 'toznyauth' ),
+        __( 'Tozny', 'toznyauth' ),
+        'administrator',
+        __FILE__,
+        'tozny_settings_page',
+        plugins_url( '/images/icon.png', __FILE__ )
+    );
     add_action( 'admin_init', 'register_tozny_settings' );
 }
 
@@ -408,8 +420,11 @@ function tozny_profile_enqueue_scripts ($hook) {
         wp_enqueue_style('toznyauth_profile_style');
         wp_enqueue_script('toznyauth_profile_script');
         wp_localize_script('toznyauth_profile_script', 'ajax_object', array(
-            'ajax_url'   => admin_url('admin-ajax.php'),
-            'user_id'    => $user->ID
+            'ajax_url'              => admin_url('admin-ajax.php'),
+            'user_id'               => $user->ID,
+            'bad_user_request'      => esc_html__( 'Could not complete request to create a new Tozny user.', 'toznyauth' ),
+            'could_not_create'      => esc_html__( 'Could not create a new Tozny user.', 'toznyauth' ),
+            'your_phone_is_the_key' => esc_html__( 'TOZNY: Your phone is the key.', 'toznyauth' ),
         ));
     }
 
@@ -458,7 +473,7 @@ function tozny_settings_page() {
     global $REALM_KEY_TEST_MESSAGE;
     ?>
     <div class="wrap">
-        <h2>Tozny</h2>
+        <h2><?php esc_html_e( 'Tozny', 'toznyauth' ); ?></h2>
 
         <form method="post" action="options.php">
             <?php settings_fields( 'tozny-settings-group' ); ?>
@@ -470,27 +485,27 @@ function tozny_settings_page() {
             <?php endif; ?>
             <table class="form-table">
                 <tr valign="top">
-                    <th scope="row">API URL</th>
+                    <th scope="row"><?php esc_html_e( 'API URL', 'toznyauth' ); ?></th>
                     <td><input type="text" name="tozny_api_url" value="<?php $api_url = get_option('tozny_api_url'); echo(empty($api_url) ? 'https://api.tozny.com/' : esc_url($api_url)); ?>" /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Realm Key ID</th>
+                    <th scope="row"><?php esc_html_e( 'Realm Key ID', 'toznyauth' ); ?></th>
                     <td><input type="text" name="tozny_realm_key_id" value="<?php echo(esc_attr(get_option('tozny_realm_key_id'))); ?>" /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Realm Key Secret</th>
+                    <th scope="row"><?php esc_html_e( 'Realm Key Secret', 'toznyauth' ); ?></th>
                     <td><input type="text" name="tozny_realm_key_secret" value="<?php echo(esc_attr(get_option('tozny_realm_key_secret'))); ?>" /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Allow users to add devices?</th>
+                    <th scope="row"><?php esc_html_e( 'Allow users to add devices?', 'toznyauth' ); ?></th>
                     <td><input type="checkbox" name="tozny_allow_users_to_add_devices" <?php checked(get_option('tozny_allow_users_to_add_devices'), 'on'); ?> /></td>
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row">Show modal on login-page load?</th>
+                    <th scope="row"><?php esc_html_e( 'Show modal on login-page load?', 'toznyauth' ); ?></th>
                     <td><input type="checkbox" name="tozny_modal_on_load" <?php checked(get_option('tozny_modal_on_load'), 'on'); ?> /></td>
                 </tr>
             </table>
@@ -508,7 +523,7 @@ function tozny_settings_page() {
 //=====================================================================
 add_action('admin_enqueue_scripts', 'tozny_profile_enqueue_scripts');
 add_action('login_enqueue_scripts', 'tozny_login_enqueue_scripts');
-add_action('login_head','process_tozny_login_attempt');
+add_action('login_init','process_tozny_login_attempt');
 add_action('login_form','add_tozny_script');
 add_action('admin_menu','tozny_create_menu');
 add_action('load-toplevel_page_toznyauth/toznyauth','test_realm_key');
