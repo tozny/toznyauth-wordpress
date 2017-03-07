@@ -523,7 +523,7 @@ function tozny_settings_page() {
 //=====================================================================
 add_action('admin_enqueue_scripts', 'tozny_profile_enqueue_scripts');
 add_action('login_enqueue_scripts', 'tozny_login_enqueue_scripts');
-add_action('login_head','process_tozny_login_attempt');
+add_action('login_init','process_tozny_login_attempt');
 add_action('login_form','add_tozny_script');
 add_action('admin_menu','tozny_create_menu');
 add_action('load-toplevel_page_toznyauth/toznyauth','test_realm_key');
